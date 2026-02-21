@@ -67,19 +67,19 @@ export function createUpdateEnemyBehaviour(
 
       if (overshootX) {
         agent.x = player.x;
-        agent.directionX = 0;
       } else {
         agent.x += stepX;
       }
       resolveAgentGridCollision(agent, grid, 'x');
+      if (overshootX) agent.directionX = 0;
 
       if (overshootY) {
         agent.y = player.y;
-        agent.directionY = 0;
       } else {
         agent.y += stepY;
       }
       resolveAgentGridCollision(agent, grid, 'y');
+      if (overshootY) agent.directionY = 0;
     } else {
       agent.x += stepX;
       resolveAgentGridCollision(agent, grid, 'x');
