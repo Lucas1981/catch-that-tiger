@@ -68,6 +68,7 @@ const FRAMES = {
   preyGreen: { x: 128, y: 128 },
   enemyFast: { x: 256, y: 128 },
   enemySlow: { x: 384, y: 0 },
+  item: { x: 384, y: 128 },
 } as const;
 
 export type PreyVariant = "fast" | "slow";
@@ -254,6 +255,63 @@ export function createEnemy(
 
   agent.view = sprite;
   return agent;
+}
+
+/**
+ * Create an item agent. Static, does not move. Sprite at (384, 128).
+ */
+export function createItem(
+  x: number,
+  y: number,
+  world: Container,
+  spritesheetTexture: Texture,
+): Agent {
+  const texture = new Texture({
+    source: spritesheetTexture.source,
+    frame: new Rectangle(FRAMES.item.x, FRAMES.item.y, TILE_SIZE, TILE_SIZE),
+  });
+
+  const sprite = new Sprite(texture);
+  sprite.x = x;
+  sprite.y = y;
+  world.addChild(sprite);
+
+  const agent = new Agent({
+    type: AgentType.ITEM,
+    x,
+    y,
+    state: AgentState.ALIVE,
+    speed: 0,
+    directionX: 0,
+    directionY: 0,
+    hitbox: { x: 32, y: 32, width: 64, height: 64 },
+    behaviours: [],
+  });
+
+  agent.view = sprite;
+  return agent;
+}
+
+/** Static item spawn positions [gx, gy] (8 items). */
+const ITEM_POSITIONS: [number, number][] = [
+  [10, 1], [13, 1],
+  [5, 5], [18, 5],
+  [5, 18], [18, 18],
+  [10, 22], [13, 22],
+];
+
+/**
+ * Create item agents at their static positions. Items are autonomous agents, not grid tiles.
+ */
+export function createItems(
+  world: Container,
+  spritesheetTexture: Texture,
+): Agent[] {
+  return ITEM_POSITIONS.map(([gx, gy]) => {
+    const x = gx * TILE_SIZE;
+    const y = gy * TILE_SIZE;
+    return createItem(x, y, world, spritesheetTexture);
+  });
 }
 
 /**

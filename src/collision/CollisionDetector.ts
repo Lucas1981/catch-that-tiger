@@ -1,4 +1,5 @@
 import { CONFIG } from '../config';
+import { TILE_SOLID } from '../grid/Tile';
 import type { Agent } from '../agents/Agent';
 import type { Grid } from '../grid/Grid';
 
@@ -14,7 +15,7 @@ function overlappingSolids(
   const maxGy = Math.min(grid.height - 1, Math.floor((bottom - 1) / T));
   for (let gy = minGy; gy <= maxGy; gy++)
     for (let gx = minGx; gx <= maxGx; gx++)
-      if (grid.getTileAt(gx, gy) !== 0) out.push([gx, gy]);
+      if (grid.getTileAt(gx, gy) === TILE_SOLID) out.push([gx, gy]);
   return out;
 }
 
