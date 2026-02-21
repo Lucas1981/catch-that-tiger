@@ -1,0 +1,13 @@
+---
+description: Project context and plan for Catch That Tiger game
+alwaysApply: true
+---
+
+# Catch That Tiger - Project Context
+
+When working on this codebase, consult these files for project context:
+
+- **PLAN.md** - Full specification: architecture, module specs, implementation order, time management (60fps frame-based updates)
+- **TODO.md** - Progress tracker; update when completing tasks
+
+Build incrementally, one file or function at a time. Follow the implementation order in PLAN.md.
