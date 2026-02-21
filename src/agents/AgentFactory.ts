@@ -5,6 +5,7 @@ import { Agent } from "./Agent";
 import { AgentType, AgentState } from "./types";
 import { createUpdatePlayerBehaviour } from "./updatePlayer";
 import { createUpdatePreyBehaviour } from "./updatePrey";
+import { createUpdateEnemyBehaviour } from "./updateEnemy";
 import type { InputManager } from "../input/InputManager";
 import type { Grid } from "../grid/Grid";
 
@@ -65,9 +66,12 @@ const FRAMES = {
   player: { x: 256, y: 0 },
   preyOrange: { x: 0, y: 128 },
   preyGreen: { x: 128, y: 128 },
+  enemyFast: { x: 256, y: 128 },
+  enemySlow: { x: 384, y: 0 },
 } as const;
 
 export type PreyVariant = "fast" | "slow";
+export type EnemyVariant = "fast" | "slow";
 
 /**
  * Create a player agent with sprite representation.
@@ -198,6 +202,109 @@ export function generatePrey(
     const x = gx * TILE_SIZE;
     const y = gy * TILE_SIZE;
     const agent = createPrey(
+      x,
+      y,
+      variant,
+      world,
+      spritesheetTexture,
+      grid,
+      getPlayer,
+    );
+    result.push(agent);
+  }
+
+  return result;
+}
+
+/**
+ * Create an enemy agent. Fast and slow variants. Chases the player across the full scene.
+ */
+export function createEnemy(
+  x: number,
+  y: number,
+  variant: EnemyVariant,
+  world: Container,
+  spritesheetTexture: Texture,
+  grid: Grid,
+  getPlayer: () => Agent | undefined,
+): Agent {
+  const frame = variant === "fast" ? FRAMES.enemyFast : FRAMES.enemySlow;
+  const speed = CONFIG.enemySpeed[variant];
+  const texture = new Texture({
+    source: spritesheetTexture.source,
+    frame: new Rectangle(frame.x, frame.y, TILE_SIZE, TILE_SIZE),
+  });
+
+  const sprite = new Sprite(texture);
+  sprite.x = x;
+  sprite.y = y;
+  world.addChild(sprite);
+
+  const agent = new Agent({
+    type: AgentType.ENEMY,
+    x,
+    y,
+    state: AgentState.ALIVE,
+    speed,
+    directionX: 0,
+    directionY: 0,
+    hitbox: { x: 32, y: 32, width: 64, height: 64 },
+    behaviours: [createUpdateEnemyBehaviour(getPlayer, grid)],
+  });
+
+  agent.view = sprite;
+  return agent;
+}
+
+/**
+ * Generate enemies with random placement. Passable tiles, avoids other agents,
+ * minDistFromPlayerTiles away from the player.
+ */
+export function generateEnemies(
+  countFast: number,
+  countSlow: number,
+  world: Container,
+  spritesheetTexture: Texture,
+  grid: Grid,
+  getPlayer: () => Agent | undefined,
+  existingAgents: Agent[],
+  minDistFromPlayerTiles = 12,
+): Agent[] {
+  const player = getPlayer();
+  const playerCenterX = player
+    ? player.x + player.hitbox.x + player.hitbox.width / 2
+    : -9999;
+  const playerCenterY = player
+    ? player.y + player.hitbox.y + player.hitbox.height / 2
+    : -9999;
+  const minDistPx = minDistFromPlayerTiles * TILE_SIZE;
+
+  let occupied = new Set<string>();
+  for (const a of existingAgents) {
+    for (const k of tilesOccupiedBy(a)) occupied.add(k);
+  }
+
+  const validPositions = getValidSpawnPositions(
+    grid,
+    occupied,
+    playerCenterX,
+    playerCenterY,
+    minDistPx,
+  );
+
+  const result: Agent[] = [];
+  const toSpawn: EnemyVariant[] = [
+    ...Array(countFast).fill("fast"),
+    ...Array(countSlow).fill("slow"),
+  ];
+
+  let posIndex = 0;
+  for (const variant of toSpawn) {
+    if (posIndex >= validPositions.length) break;
+    const [gx, gy] = validPositions[posIndex++];
+    const x = gx * TILE_SIZE;
+    const y = gy * TILE_SIZE;
+    const agent = createEnemy(
       x,
       y,
       variant,

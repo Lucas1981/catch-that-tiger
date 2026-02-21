@@ -19,4 +19,6 @@ export const CONFIG = {
   playerSpeed: 8,
   /** Prey speeds: fast (orange), slow (green). */
   preySpeed: { fast: 7, slow: 5 },
+  /** Enemy speeds: fast, slow. */
+  enemySpeed: { fast: 6, slow: 4 },
 } as const;
