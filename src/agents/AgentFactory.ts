@@ -1,12 +1,12 @@
-import { Rectangle, Sprite, Texture } from 'pixi.js';
-import type { Container } from 'pixi.js';
-import { CONFIG } from '../config';
-import { Agent } from './Agent';
-import { AgentType, AgentState } from './types';
-import { createUpdatePlayerBehaviour } from './updatePlayer';
-import { createUpdatePreyBehaviour } from './updatePrey';
-import type { InputManager } from '../input/InputManager';
-import type { Grid } from '../grid/Grid';
+import { Rectangle, Sprite, Texture } from "pixi.js";
+import type { Container } from "pixi.js";
+import { CONFIG } from "../config";
+import { Agent } from "./Agent";
+import { AgentType, AgentState } from "./types";
+import { createUpdatePlayerBehaviour } from "./updatePlayer";
+import { createUpdatePreyBehaviour } from "./updatePrey";
+import type { InputManager } from "../input/InputManager";
+import type { Grid } from "../grid/Grid";
 
 const TILE_SIZE = CONFIG.tileSize;
 const PREY_RANGE_TILES = 8;
@@ -23,8 +23,7 @@ function tilesOccupiedBy(agent: Agent): Set<string> {
   const maxGy = Math.floor((bottom - 1) / TILE_SIZE);
   const out = new Set<string>();
   for (let gy = minGy; gy <= maxGy; gy++)
-    for (let gx = minGx; gx <= maxGx; gx++)
-      out.add(`${gx},${gy}`);
+    for (let gx = minGx; gx <= maxGx; gx++) out.add(`${gx},${gy}`);
   return out;
 }
 
@@ -42,7 +41,7 @@ function getValidSpawnPositions(
   occupied: Set<string>,
   playerCenterX: number,
   playerCenterY: number,
-  minDistPx: number
+  minDistPx: number,
 ): [number, number][] {
   const valid: [number, number][] = [];
   const minDistSq = minDistPx * minDistPx;
@@ -68,7 +67,7 @@ const FRAMES = {
   preyGreen: { x: 128, y: 128 },
 } as const;
 
-export type PreyVariant = 'fast' | 'slow';
+export type PreyVariant = "fast" | "slow";
 
 /**
  * Create a player agent with sprite representation.
@@ -81,17 +80,12 @@ export function createPlayer(
   world: Container,
   spritesheetTexture: Texture,
   inputManager: InputManager,
-  grid: Grid
+  grid: Grid,
 ): Agent {
   const tileSize = CONFIG.tileSize;
   const playerTexture = new Texture({
     source: spritesheetTexture.source,
-    frame: new Rectangle(
-      FRAMES.player.x,
-      FRAMES.player.y,
-      tileSize,
-      tileSize
-    ),
+    frame: new Rectangle(FRAMES.player.x, FRAMES.player.y, tileSize, tileSize),
   });
 
   const sprite = new Sprite(playerTexture);
@@ -108,7 +102,7 @@ export function createPlayer(
     speed: CONFIG.playerSpeed,
     directionX: 0,
     directionY: 0,
-    hitbox: { x: 32, y: 32, width: 64, height: 64 },
+    hitbox: { x: 32, y: 32, width: 63, height: 63 },
     behaviours: [createUpdatePlayerBehaviour(inputManager, grid)],
   });
 
@@ -126,9 +120,9 @@ export function createPrey(
   world: Container,
   spritesheetTexture: Texture,
   grid: Grid,
-  getPlayer: () => Agent | undefined
+  getPlayer: () => Agent | undefined,
 ): Agent {
-  const frame = variant === 'fast' ? FRAMES.preyOrange : FRAMES.preyGreen;
+  const frame = variant === "fast" ? FRAMES.preyOrange : FRAMES.preyGreen;
   const speed = CONFIG.preySpeed[variant];
   const texture = new Texture({
     source: spritesheetTexture.source,
@@ -167,7 +161,7 @@ export function generatePrey(
   spritesheetTexture: Texture,
   grid: Grid,
   getPlayer: () => Agent | undefined,
-  existingAgents: Agent[]
+  existingAgents: Agent[],
 ): Agent[] {
   const player = getPlayer();
   const playerCenterX = player
@@ -188,13 +182,13 @@ export function generatePrey(
     occupied,
     playerCenterX,
     playerCenterY,
-    minDistPx
+    minDistPx,
   );
 
   const result: Agent[] = [];
   const toSpawn: PreyVariant[] = [
-    ...Array(countFast).fill('fast'),
-    ...Array(countSlow).fill('slow'),
+    ...Array(countFast).fill("fast"),
+    ...Array(countSlow).fill("slow"),
   ];
 
   let posIndex = 0;
@@ -203,7 +197,15 @@ export function generatePrey(
     const [gx, gy] = validPositions[posIndex++];
     const x = gx * TILE_SIZE;
     const y = gy * TILE_SIZE;
-    const agent = createPrey(x, y, variant, world, spritesheetTexture, grid, getPlayer);
+    const agent = createPrey(
+      x,
+      y,
+      variant,
+      world,
+      spritesheetTexture,
+      grid,
+      getPlayer,
+    );
     result.push(agent);
   }
 
