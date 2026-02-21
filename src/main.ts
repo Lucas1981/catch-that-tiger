@@ -39,7 +39,8 @@ async function init(): Promise<void> {
     centerY,
     scrollEngine.world,
     spritesheetTexture,
-    inputManager
+    inputManager,
+    grid
   );
 
   const agents = [player];
@@ -52,7 +53,6 @@ async function init(): Promise<void> {
     scrollEngine,
     inputManager,
     agents,
-    grid,
   });
 }
 

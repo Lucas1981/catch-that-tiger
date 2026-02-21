@@ -5,6 +5,7 @@ import { Agent } from './Agent';
 import { AgentType } from './types';
 import { createUpdatePlayerBehaviour } from './updatePlayer';
 import type { InputManager } from '../input/InputManager';
+import type { Grid } from '../grid/Grid';
 
 /** Spritesheet frame for player (128x128 at x=256). */
 const PLAYER_FRAME = { x: 256, y: 0 };
@@ -19,7 +20,8 @@ export function createPlayer(
   y: number,
   world: Container,
   spritesheetTexture: Texture,
-  inputManager: InputManager
+  inputManager: InputManager,
+  grid: Grid
 ): Agent {
   const tileSize = CONFIG.tileSize;
   const playerTexture = new Texture({
@@ -46,7 +48,7 @@ export function createPlayer(
     directionX: 0,
     directionY: 0,
     hitbox: { x: 32, y: 32, width: 64, height: 64 },
-    behaviours: [createUpdatePlayerBehaviour(inputManager)],
+    behaviours: [createUpdatePlayerBehaviour(inputManager, grid)],
   });
 
   agent.view = sprite;

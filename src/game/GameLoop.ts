@@ -2,7 +2,6 @@ import type { Renderer } from "../graphics/Renderer";
 import type { ScrollEngine } from "../scroll/ScrollEngine";
 import type { InputManager } from "../input/InputManager";
 import type { Agent } from "../agents/Agent";
-import type { Grid } from "../grid/Grid";
 import { GameState } from "./GameState";
 import { handleTitle } from "./handlers/handleTitle";
 import { handleRunning } from "./handlers/handleRunning";
@@ -18,7 +17,6 @@ export interface GameLoopOptions {
   scrollEngine?: ScrollEngine;
   inputManager?: InputManager;
   agents?: Agent[];
-  grid?: Grid;
 }
 
 /**
@@ -32,7 +30,6 @@ export function runGameLoop(options: GameLoopOptions): void {
     scrollEngine,
     inputManager,
     agents = [],
-    grid,
   } = options;
   let gameState = initialState;
   let lastFrameTime = performance.now();
@@ -51,7 +48,6 @@ export function runGameLoop(options: GameLoopOptions): void {
           scrollEngine,
           inputManager,
           agents,
-          grid,
         });
         break;
       case GameState.LOST:

@@ -1,7 +1,5 @@
 import { AgentType } from "../../agents/types";
-import { resolveAgentGridCollision } from "../../collision/CollisionDetector";
 import type { Agent } from "../../agents/Agent";
-import type { Grid } from "../../grid/Grid";
 import type { Renderer } from "../../graphics/Renderer";
 import type { ScrollEngine } from "../../scroll/ScrollEngine";
 import type { InputManager } from "../../input/InputManager";
@@ -13,7 +11,6 @@ export interface RunningContext {
   scrollEngine?: ScrollEngine;
   inputManager?: InputManager;
   agents?: Agent[];
-  grid?: Grid;
 }
 
 /**
@@ -25,16 +22,10 @@ export function handleRunning(
   _setGameState: GameStateSetter,
   context?: RunningContext,
 ): void {
-  const { scrollEngine, agents = [], grid } = context ?? {};
+  const { scrollEngine, agents = [] } = context ?? {};
 
   for (const agent of agents) {
     agent.update();
-  }
-
-  if (grid) {
-    for (const agent of agents) {
-      resolveAgentGridCollision(agent, grid);
-    }
   }
 
   const player = agents.find((a) => a.type === AgentType.PLAYER);

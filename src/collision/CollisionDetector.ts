@@ -2,109 +2,70 @@ import { CONFIG } from '../config';
 import type { Agent } from '../agents/Agent';
 import type { Grid } from '../grid/Grid';
 
-const TILE_SIZE = CONFIG.tileSize;
+const T = CONFIG.tileSize;
 
-function getOverlappingTiles(
-  left: number,
-  top: number,
-  right: number,
-  bottom: number,
-  grid: Grid
+function overlappingSolids(
+  left: number, top: number, right: number, bottom: number, grid: Grid
 ): [number, number][] {
-  const minGx = Math.max(0, Math.floor(left / TILE_SIZE));
-  const maxGx = Math.min(grid.width - 1, Math.floor((right - 1) / TILE_SIZE));
-  const minGy = Math.max(0, Math.floor(top / TILE_SIZE));
-  const maxGy = Math.min(grid.height - 1, Math.floor((bottom - 1) / TILE_SIZE));
-  const result: [number, number][] = [];
-  for (let gy = minGy; gy <= maxGy; gy++) {
-    for (let gx = minGx; gx <= maxGx; gx++) {
-      if (grid.getTileAt(gx, gy) !== 0) {
-        result.push([gx, gy]);
-      }
-    }
-  }
-  return result;
+  const out: [number, number][] = [];
+  const minGx = Math.max(0, Math.floor(left / T));
+  const maxGx = Math.min(grid.width - 1, Math.floor((right - 1) / T));
+  const minGy = Math.max(0, Math.floor(top / T));
+  const maxGy = Math.min(grid.height - 1, Math.floor((bottom - 1) / T));
+  for (let gy = minGy; gy <= maxGy; gy++)
+    for (let gx = minGx; gx <= maxGx; gx++)
+      if (grid.getTileAt(gx, gy) !== 0) out.push([gx, gy]);
+  return out;
 }
 
-/**
- * Resolve agent overlap with solid grid tiles by repositioning.
- * Resolves X then Y. Repositions so hitbox touches tile edge in movement direction.
- */
-export function resolveAgentGridCollision(agent: Agent, grid: Grid): void {
-  const hitbox = agent.hitbox;
-  let left = agent.x + hitbox.x;
-  let top = agent.y + hitbox.y;
-  let right = agent.x + hitbox.x + hitbox.width;
-  let bottom = agent.y + hitbox.y + hitbox.height;
-
-  const agentCenterX = agent.x + hitbox.x + hitbox.width / 2;
-  const agentCenterY = agent.y + hitbox.y + hitbox.height / 2;
-
-  if (agent.directionX === -1) {
-    const tiles = getOverlappingTiles(left, top, right, bottom, grid);
-    let bestX: number | null = null;
-    for (const [gx] of tiles) {
-      const tileRight = (gx + 1) * TILE_SIZE;
-      const tileCenterX = (gx + 0.5) * TILE_SIZE;
-      if (tileCenterX < agentCenterX) {
-        const newX = tileRight - hitbox.x;
-        if (bestX === null || newX > bestX) bestX = newX;
-      }
-    }
-    if (bestX !== null) {
-      agent.x = bestX;
-      left = agent.x + hitbox.x;
-      right = agent.x + hitbox.x + hitbox.width;
+function resolveX(agent: Agent, grid: Grid): void {
+  if (agent.directionX === 0) return;
+  const h = agent.hitbox;
+  const left = agent.x + h.x, right = agent.x + h.x + h.width;
+  const top = agent.y + h.y, bottom = agent.y + h.y + h.height;
+  const cx = agent.x + h.x + h.width / 2;
+  let best: number | null = null;
+  for (const [gx] of overlappingSolids(left, top, right, bottom, grid)) {
+    const tL = gx * T, tR = (gx + 1) * T, tCx = (gx + 0.5) * T;
+    const tileOnLeft = tCx < cx;
+    if (agent.directionX === -1 && tileOnLeft) {
+      const nx = tR - h.x;
+      if (best === null || nx > best) best = nx;
+    } else if (agent.directionX === 1 && !tileOnLeft) {
+      const nx = tL - h.x - h.width;
+      if (best === null || nx < best) best = nx;
     }
   }
+  if (best !== null) agent.x = best;
+}
 
-  if (agent.directionX === 1) {
-    const tiles = getOverlappingTiles(left, top, right, bottom, grid);
-    let bestX: number | null = null;
-    for (const [gx] of tiles) {
-      const tileLeft = gx * TILE_SIZE;
-      const tileCenterX = (gx + 0.5) * TILE_SIZE;
-      if (tileCenterX > agentCenterX) {
-        const newX = tileLeft - hitbox.x - hitbox.width;
-        if (bestX === null || newX < bestX) bestX = newX;
-      }
-    }
-    if (bestX !== null) {
-      agent.x = bestX;
-      left = agent.x + hitbox.x;
-      right = agent.x + hitbox.x + hitbox.width;
+function resolveY(agent: Agent, grid: Grid): void {
+  if (agent.directionY === 0) return;
+  const h = agent.hitbox;
+  const left = agent.x + h.x, right = agent.x + h.x + h.width;
+  const top = agent.y + h.y, bottom = agent.y + h.y + h.height;
+  const cy = agent.y + h.y + h.height / 2;
+  let best: number | null = null;
+  for (const [, gy] of overlappingSolids(left, top, right, bottom, grid)) {
+    const tT = gy * T, tB = (gy + 1) * T, tCy = (gy + 0.5) * T;
+    const tileAbove = tCy < cy;
+    if (agent.directionY === -1 && tileAbove) {
+      const ny = tB - h.y;
+      if (best === null || ny > best) best = ny;
+    } else if (agent.directionY === 1 && !tileAbove) {
+      const ny = tT - h.y - h.height;
+      if (best === null || ny < best) best = ny;
     }
   }
+  if (best !== null) agent.y = best;
+}
 
-  if (agent.directionY === -1) {
-    const tiles = getOverlappingTiles(left, top, right, bottom, grid);
-    let bestY: number | null = null;
-    for (const [, gy] of tiles) {
-      const tileBottom = (gy + 1) * TILE_SIZE;
-      const tileCenterY = (gy + 0.5) * TILE_SIZE;
-      if (tileCenterY < agentCenterY) {
-        const newY = tileBottom - hitbox.y;
-        if (bestY === null || newY > bestY) bestY = newY;
-      }
-    }
-    if (bestY !== null) {
-      agent.y = bestY;
-      top = agent.y + hitbox.y;
-      bottom = agent.y + hitbox.y + hitbox.height;
-    }
-  }
-
-  if (agent.directionY === 1) {
-    const tiles = getOverlappingTiles(left, top, right, bottom, grid);
-    let bestY: number | null = null;
-    for (const [, gy] of tiles) {
-      const tileTop = gy * TILE_SIZE;
-      const tileCenterY = (gy + 0.5) * TILE_SIZE;
-      if (tileCenterY > agentCenterY) {
-        const newY = tileTop - hitbox.y - hitbox.height;
-        if (bestY === null || newY < bestY) bestY = newY;
-      }
-    }
-    if (bestY !== null) agent.y = bestY;
-  }
+/** Resolve grid collision for one axis. Call after moving on that axis. */
+export function resolveAgentGridCollision(
+  agent: Agent,
+  grid: Grid,
+  axis: 'x' | 'y'
+): void {
+  if (axis === 'x') resolveX(agent, grid);
+  else resolveY(agent, grid);
 }
