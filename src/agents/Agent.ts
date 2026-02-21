@@ -1,12 +1,12 @@
 import type { Sprite } from 'pixi.js';
-import { AgentType, type AgentBehaviour } from './types';
+import { AgentType, AgentState, type AgentBehaviour } from './types';
 import type { Hitbox } from '../collision/types';
 
 export interface AgentOptions {
   type: AgentType;
   x?: number;
   y?: number;
-  state?: unknown;
+  state?: AgentState;
   speed?: number;
   directionX?: number;
   directionY?: number;
@@ -23,7 +23,7 @@ export class Agent {
 
   private _x = 0;
   private _y = 0;
-  private _state: unknown = null;
+  private _state: AgentState = AgentState.ALIVE;
 
   speed = 0;
   directionX = 0;
@@ -41,7 +41,7 @@ export class Agent {
     this.type = options.type;
     this._x = options.x ?? 0;
     this._y = options.y ?? 0;
-    this._state = options.state ?? null;
+    this._state = options.state ?? AgentState.ALIVE;
     this.speed = options.speed ?? 0;
     this.directionX = options.directionX ?? 0;
     this.directionY = options.directionY ?? 0;
@@ -65,12 +65,20 @@ export class Agent {
     this._y = value;
   }
 
-  get state(): unknown {
+  get state(): AgentState {
     return this._state;
   }
 
-  set state(value: unknown) {
+  set state(value: AgentState) {
     this._state = value;
+  }
+
+  kill(): void {
+    this._state = AgentState.DEAD;
+  }
+
+  isAlive(): boolean {
+    return this._state === AgentState.ALIVE;
   }
 
   /** Run all behaviour functions, passing this agent. */

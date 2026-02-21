@@ -7,7 +7,7 @@ import { Grid } from './grid/Grid';
 import { createGridView } from './grid/GridView';
 import { ScrollEngine } from './scroll/ScrollEngine';
 import { InputManager } from './input/InputManager';
-import { createPlayer } from './agents/AgentFactory';
+import { createPlayer, generatePrey } from './agents/AgentFactory';
 
 async function init(): Promise<void> {
   const renderer = new Renderer();
@@ -43,7 +43,19 @@ async function init(): Promise<void> {
     grid
   );
 
-  const agents = [player];
+  const getPlayer = () => player;
+
+  const prey = generatePrey(
+    6,
+    6,
+    scrollEngine.world,
+    spritesheetTexture,
+    grid,
+    getPlayer,
+    [player]
+  );
+
+  const agents = [player, ...prey];
 
   scrollEngine.follow(player.x, player.y);
 

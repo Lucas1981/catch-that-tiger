@@ -17,4 +17,6 @@ export const CONFIG = {
   cameraSpeed: 8,
   /** Player movement speed in pixels per frame. */
   playerSpeed: 8,
+  /** Prey speeds: fast (orange), slow (green). */
+  preySpeed: { fast: 7, slow: 5 },
 } as const;

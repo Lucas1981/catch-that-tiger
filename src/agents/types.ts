@@ -8,5 +8,11 @@ export enum AgentType {
   ITEM = 'item',
 }
 
+/** Agent life state. */
+export enum AgentState {
+  ALIVE = 'alive',
+  DEAD = 'dead',
+}
+
 /** Behaviour function: receives the agent to manipulate. */
 export type AgentBehaviour = (agent: Agent) => void;
